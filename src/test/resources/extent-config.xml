@@ -1,0 +1,9 @@
+<extentreports>
+    <configuration>
+        <theme>standard</theme>
+        <documentTitle>Automation Practice - Test Report</documentTitle>
+        <reportName>Selenium + Cucumber Regression Report</reportName>
+        <encoding>UTF-8</encoding>
+        <protocol>https</protocol>
+    </configuration>
+</extentreports>
