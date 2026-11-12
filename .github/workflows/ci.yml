@@ -17,7 +17,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
 
     steps:
@@ -39,29 +44,30 @@ jobs:
       - name: Run tests (headless Chrome)
         env:
           CUCUMBER_TAGS: ${{ github.event.inputs.tags || '@smoke or @regression' }}
+        shell: pwsh
         run: >
           mvn -B clean test
           -Dbrowser=chrome
           -Dheadless=true
-          -Dcucumber.filter.tags="${CUCUMBER_TAGS}"
+          "-Dcucumber.filter.tags=$env:CUCUMBER_TAGS"
 
       - name: Upload Cucumber HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cucumber-html-report
+          name: cucumber-html-report-${{ matrix.os }}
           path: target/cucumber-reports/
 
       - name: Upload Extent Spark report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: extent-spark-report
+          name: extent-spark-report-${{ matrix.os }}
           path: target/extent-reports/
 
       - name: Upload Surefire results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: surefire-results
+          name: surefire-results-${{ matrix.os }}
           path: target/surefire-reports/

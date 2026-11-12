@@ -36,9 +36,11 @@ public class BasePage {
     }
 
     protected void type(By locator, String text) {
-        WebElement el = waitVisible(locator);
+        WebElement el = waitClickable(locator);
+        el.click();
         el.clear();
         el.sendKeys(text);
+        wait.until(ExpectedConditions.attributeToBe(locator, "value", text));
     }
 
     protected String getText(By locator) {

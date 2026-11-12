@@ -2,7 +2,6 @@ package hooks;
 
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
-import io.cucumber.java.BeforeAll;
 import io.cucumber.java.Scenario;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -12,34 +11,24 @@ import utils.DriverFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Hooks {
 
-    private static final Path[] EVIDENCE_DIRECTORIES = {
-            Path.of("target/cucumber-reports"),
-            Path.of("target/extent-reports"),
-            Path.of("target/surefire-reports"),
-            Path.of("target/videos")
-    };
     private static final AtomicInteger SCENARIO_NUMBER = new AtomicInteger();
     private Process videoRecorder;
     private Path videoPath;
 
-    @BeforeAll
-    public static void cleanPreviousEvidence() {
-        for (Path directory : EVIDENCE_DIRECTORIES) {
-            deleteDirectory(directory);
-        }
-    }
-
     @Before
     public void setUp(Scenario scenario) {
         WebDriver driver = DriverFactory.getDriver();
-        if (isChrome() && driver != null) {
+        if (isChrome() && driver != null && isMacOS() && !isHeadless()) {
             startVideo(scenario);
+        } else if (isChrome()) {
+            System.out.println(">>> Video recording skipped on " + System.getProperty("os.name", "unknown")
+                    + (isHeadless() ? " in headless mode" : ""));
         }
         System.out.println(">>> Starting scenario: " + scenario.getName());
     }
@@ -114,26 +103,17 @@ public class Hooks {
         return "chrome".equalsIgnoreCase(System.getProperty("browser", "chrome"));
     }
 
+    private static boolean isMacOS() {
+        return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("mac");
+    }
+
+    private static boolean isHeadless() {
+        return Boolean.parseBoolean(System.getProperty("headless", "false"));
+    }
+
     private static String sanitize(String scenarioName) {
         return scenarioName.toLowerCase()
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("^-|-$", "");
-    }
-
-    private static void deleteDirectory(Path directory) {
-        if (!Files.exists(directory)) {
-            return;
-        }
-        try (var paths = Files.walk(directory)) {
-            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
-                try {
-                    Files.deleteIfExists(path);
-                } catch (IOException exception) {
-                    throw new IllegalStateException("Unable to clean old evidence: " + path, exception);
-                }
-            });
-        } catch (IOException exception) {
-            throw new IllegalStateException("Unable to inspect old evidence directory: " + directory, exception);
-        }
     }
 }
