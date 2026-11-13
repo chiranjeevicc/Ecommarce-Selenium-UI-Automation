@@ -1,4 +1,4 @@
-# Selenium + Cucumber + TestNG Practice Framework
+# Selenium + Cucumber + TestNG  Framework
 
 A real-project-shaped automation framework, built on the SauceDemo (`h
 `)
